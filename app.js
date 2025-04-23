@@ -4,8 +4,6 @@ document.getElementById('patientForm').addEventListener('submit', function(event
     // Obtener los valores del formulario
     const name = document.getElementById('name').value;
     const familyName = document.getElementById('familyName').value;
-    const gender = document.getElementById('gender').value;
-    const birthDate = document.getElementById('birthDate').value;
     const identifierSystem = document.getElementById('identifierSystem').value;
     const identifierValue = document.getElementById('identifierValue').value;
     const cellPhone = document.getElementById('cellPhone').value;
@@ -22,9 +20,7 @@ document.getElementById('patientForm').addEventListener('submit', function(event
             given: [name],
             family: familyName
         }],
-        gender: gender,
-        birthDate: birthDate,
-        identifier: [{
+            identifier: [{
             system: identifierSystem,
             value: identifierValue
         }],

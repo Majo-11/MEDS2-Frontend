@@ -3,54 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario de Paciente HL7 FHIR</title>
+    <title>Confirmación de Medicamento Recibido</title>
 </head>
 <body>
-    <h1>Formulario de Entrega de medicamentos</h1>
-    <form id="patientForm">
-        <label for="name">Nombre:</label>
-        <input type="text" id="name" name="name" required><br><br>
-
-        <label for="familyName">Apellido:</label>
-        <input type="text" id="familyName" name="familyName" required><br><br>
-
+    <h1>Confirmación de Entrega de Medicamentos</h1>
+    <form id="medicationConfirmationForm">
+        <h2>Datos del Paciente</h2>
         <label for="identifierSystem">Tipo de documento de identidad:</label>
         <select id="identifierSystem" name="identifierSystem" required>
             <option value="http://cedula">Cédula de ciudadanía</option>
             <option value="http://pasaporte">Pasaporte</option>
         </select><br><br>
 
-        <label for="identifierValue">Número de documento:</label>
+        <label for="identifierValue">Número de documento del paciente:</label>
         <input type="text" id="identifierValue" name="identifierValue" required><br><br>
 
-        <label for="cellPhone">Teléfono celular:</label>
-        <input type="text" id="cellPhone" name="cellPhone" required><br><br>
+        <hr>
 
-        <label for="email">Correo electrónico:</label>
-        <input type="text" id="email" name="email" required><br><br>
-
-        <label for="address">Dirección:</label>
-        <input type="text" id="address" name="address" required><br><br>
-
-        <label for="city">Ciudad:</label>
-        <input type="text" id="city" name="city" required><br><br>
-
-        <label for="postalCode">Código postal:</label>
-        <input type="text" id="postalCode" name="postalCode" required><br><br>
-
-        <hr> <h2>Información del Medicamento</h2>
+        <h2>Datos del Medicamento</h2>
         <label for="medicationName">Nombre del Medicamento:</label>
         <input type="text" id="medicationName" name="medicationName" required><br><br>
 
-        <label for="medicationDosage">Dosis del Medicamento:</label>
+        <label for="medicationDosage">Dosis del Medicamento (ej. "500 mg", "1 tableta"):</label>
         <input type="text" id="medicationDosage" name="medicationDosage" required><br><br>
 
         <label for="medicationReceived">
-            <input type="checkbox" id="medicationReceived" name="medicationReceived">
-            ¿Medicamento Recibido?
+            <input type="checkbox" id="medicationReceived" name="medicationReceived" required>
+            **Confirmo que el paciente recibió el medicamento.**
         </label><br><br>
 
-        <button type="submit">Enviar</button>
+        <button type="submit">Confirmar Entrega</button>
     </form>
 
     <script src="app.js"></script>

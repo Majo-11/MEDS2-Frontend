@@ -1,62 +1,67 @@
-document.getElementById('patientForm').addEventListener('submit', function(event) {
+document.getElementById('medicationConfirmationForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
     // Obtener los valores del formulario
-    const name = document.getElementById('name').value;
-    const familyName = document.getElementById('familyName').value;
     const identifierSystem = document.getElementById('identifierSystem').value;
     const identifierValue = document.getElementById('identifierValue').value;
-    const cellPhone = document.getElementById('cellPhone').value;
-    const email = document.getElementById('email').value;
-    const address = document.getElementById('address').value;
-    const city = document.getElementById('city').value;
-    const postalCode = document.getElementById('postalCode').value;
+    const medicationName = document.getElementById('medicationName').value;
+    const medicationDosage = document.getElementById('medicationDosage').value;
+    const medicationReceived = document.getElementById('medicationReceived').checked;
 
-    // Crear el objeto Patient en formato FHIR
-    const patient = {
-        resourceType: "Patient",
-        name: [{
-            use: "official",
-            given: [name],
-            family: familyName
-        }],
-            identifier: [{
-            system: identifierSystem,
-            value: identifierValue
-        }],
-        telecom: [{
-            system: "phone",
-            value: cellPhone,
-            use: "home"
-        }, {
-            system: "email",
-            value: email,
-            use: "home"
-        }],
-        address: [{
-            use: "home",
-            line: [address],
-            city: city,
-            postalCode: postalCode,
-            country: "Colombia"
-        }]
+    // Solo procede si el medicamento fue recibido
+    if (!medicationReceived) {
+        alert('Por favor, marca la casilla "Medicamento Recibido" para confirmar la administración.');
+        return;
+    }
+
+    // Objeto MedicationAdministration en formato FHIR
+    const medicationAdministration = {
+        resourceType: "MedicationAdministration",
+        status: "completed", // El medicamento ya fue administrado
+        medicationCodeableConcept: {
+            coding: [{
+                // Puedes ajustar el sistema de codificación si tienes uno específico (ej. RxNorm)
+                system: "http://example.org/fhir/ValueSet/medication-codes", // O un sistema real como "http://www.nlm.nih.gov/research/umls/rxnorm"
+                code: "XYZ123", // Reemplaza con un código real del medicamento si tienes uno
+                display: medicationName // Nombre legible del medicamento
+            }],
+            text: medicationName // Nombre legible del medicamento
+        },
+        subject: {
+            // Referencia al paciente usando su identificador
+            reference: `Patient?identifier=${identifierSystem}|${identifierValue}`
+        },
+        effectiveDateTime: new Date().toISOString(), // Fecha y hora actual de la administración
+        dosage: {
+            text: medicationDosage // Dosis del medicamento
+        }
     };
 
-    // Enviar los datos usando Fetch API
-    fetch('https://hl7-fhir-ehr-majo-backend.onrender.com/patient', {
+    // Enviar los datos usando Fetch API al endpoint de MedicationAdministration
+    fetch('https://hl7-fhir-ehr-majo-backend.onrender.com/MedicationAdministration', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(patient)
+        body: JSON.stringify(medicationAdministration)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            // Si la respuesta no es 2xx (ej. 400, 500), lanzar un error
+            return response.json().then(errorData => {
+                throw new Error(errorData.issue ? errorData.issue[0].diagnostics : 'Error desconocido al procesar la solicitud.');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         console.log('Success:', data);
-        alert('Paciente creado exitosamente!');
+        alert('Confirmación de medicamento registrada exitosamente!');
+        // Opcional: Limpiar el formulario después del éxito
+        document.getElementById('medicationConfirmationForm').reset();
     })
     .catch((error) => {
         console.error('Error:', error);
-        alert('Hubo un error al crear el paciente.');
+        alert('Hubo un error al registrar la confirmación del medicamento: ' + error.message);
     });
 });

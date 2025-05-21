@@ -14,8 +14,6 @@
         <label for="familyName">Apellido:</label>
         <input type="text" id="familyName" name="familyName" required><br><br>
 
-        
-        
         <label for="identifierSystem">Tipo de documento de identidad:</label>
         <select id="identifierSystem" name="identifierSystem" required>
             <option value="http://cedula">Cédula de ciudadanía</option>
@@ -39,6 +37,18 @@
 
         <label for="postalCode">Código postal:</label>
         <input type="text" id="postalCode" name="postalCode" required><br><br>
+
+        <hr> <h2>Información del Medicamento</h2>
+        <label for="medicationName">Nombre del Medicamento:</label>
+        <input type="text" id="medicationName" name="medicationName" required><br><br>
+
+        <label for="medicationDosage">Dosis del Medicamento:</label>
+        <input type="text" id="medicationDosage" name="medicationDosage" required><br><br>
+
+        <label for="medicationReceived">
+            <input type="checkbox" id="medicationReceived" name="medicationReceived">
+            ¿Medicamento Recibido?
+        </label><br><br>
 
         <button type="submit">Enviar</button>
     </form>

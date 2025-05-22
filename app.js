@@ -1,53 +1,57 @@
 document.getElementById('MedicamentosForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    // Obtener los valores del formulario para MedicationRequest
-    const name = document.getElementById('name').value;
-    const familyName = document.getElementById('familyName').value;
-    const identifierSystem = document.getElementById('identifierSystem').value;
-    const identifierValue = document.getElementById('identifierValue').value;
-    const medicationCode = document.getElementById('medicationCode').value;
-    const medicationDisplay = document.getElementById('medicationDisplay').value;
-    const dosage = document.getElementById('dosage').value;
-    const frequency = document.getElementById('frequency').value;
-    const duration = document.getElementById('duration').value;
+    // Obtener los valores del formulario
+    const name = document.getElementById('name').value.trim();
+    const familyName = document.getElementById('familyName').value.trim();
+    const identifierSystem = document.getElementById('identifierSystem').value.trim();
+    const identifierValue = document.getElementById('identifierValue').value.trim();
+    const medicationCode = document.getElementById('medicationCode').value.trim();
+    const medicationDisplay = document.getElementById('medicationDisplay').value.trim();
+    const dosage = document.getElementById('dosage').value.trim();
+    const frequency = document.getElementById('frequency').value.trim();
+    const duration = document.getElementById('duration').value.trim();
     const confirmMedicationAdmin = document.getElementById('confirmMedicationAdmin').checked;
 
-    // Crear el objeto MedicationRequest (la receta)
+    // ✅ Validaciones básicas
+    if (!name || !familyName || !identifierSystem || !identifierValue || 
+        !medicationCode || !medicationDisplay || !dosage || !frequency || !duration) {
+        alert('Por favor, completa todos los campos del formulario.');
+        return;
+    }
+
+    // Validaciones numéricas
+    if (isNaN(frequency) || isNaN(duration)) {
+        alert('Frecuencia y duración deben ser números válidos.');
+        return;
+    }
+
+    // Construir el objeto MedicationRequest
     const medicationRequest = {
         resourceType: "MedicationRequest",
         status: "active",
         intent: "order",
         medicationCodeableConcept: {
             coding: [{
-                system: "http://www.nlm.nih.gov/research/umls/rxnorm", // Sistema de codificación para medicamentos
+                system: "http://www.nlm.nih.gov/research/umls/rxnorm",
                 code: medicationCode,
                 display: medicationDisplay
             }],
-            text: medicationDisplay // Texto legible del medicamento
+            text: medicationDisplay
         },
         subject: {
-            // Se usa un identificador para referenciar al paciente.
-            // Para FHIR, lo ideal es una referencia directa a un ID de Patient,
-            // pero si el backend lo maneja así, está bien.
             identifier: {
                 system: identifierSystem,
                 value: identifierValue
             },
-            display: `${name} ${familyName}` // Nombre legible para el display
+            display: `${name} ${familyName}`
         },
-        // Información del que prescribe (ej. Practitioner) se puede añadir aquí si es necesario
-        // requester: {
-        //   reference: "Practitioner/example",
-        //   display: "Dr. Juan Pérez"
-        // },
         dosageInstruction: [{
             text: `Tomar ${dosage} cada ${frequency} horas durante ${duration} días`
-        }],
-        // Extensiones u otros elementos FHIR si se necesitan
+        }]
     };
 
-    // 1. Enviar la MedicationRequest al backend
+    // Enviar MedicationRequest
     fetch('https://meds-backend-fjhd.onrender.com/medication-request', {
         method: 'POST',
         headers: {
@@ -58,51 +62,44 @@ document.getElementById('MedicamentosForm').addEventListener('submit', function(
     .then(response => {
         if (!response.ok) {
             return response.json().then(errorData => {
-                throw new Error(errorData.issue ? errorData.issue[0].diagnostics : 'Error desconocido al crear la receta.');
+                throw new Error(errorData.issue?.[0]?.diagnostics || 'Error al crear la receta.');
             });
         }
         return response.json();
     })
     .then(medRequestData => {
         console.log('MedicationRequest Success:', medRequestData);
-        alert('Receta creada exitosamente!');
+        alert('¡Receta creada exitosamente!');
 
-        // 2. Si el checkbox de confirmación está marcado, proceder con MedicationAdministration
+        // Validar si se confirmó la administración del medicamento
         if (confirmMedicationAdmin) {
             const medicationAdministration = {
                 resourceType: "MedicationAdministration",
-                status: "completed", // Estado: Completado (ya se administró)
+                status: "completed",
                 medicationCodeableConcept: {
                     coding: [{
                         system: "http://www.nlm.nih.gov/research/umls/rxnorm",
-                        code: medicationCode, // Usar el mismo código de medicamento de la receta
-                        display: medicationDisplay // Usar el mismo display del medicamento
+                        code: medicationCode,
+                        display: medicationDisplay
                     }],
                     text: medicationDisplay
                 },
                 subject: {
-                    // Referencia al paciente usando su identificador.
-                    // Idealmente, aquí se usaría el ID del paciente si tu backend lo devuelve al crear/buscar un Patient.
-                    // Si la MedRequest te devuelve el Patient ID, úsalo: reference: `Patient/${medRequestData.subject.reference.split('/')[1]}`
                     identifier: {
                         system: identifierSystem,
                         value: identifierValue
                     }
                 },
-                // Referencia a la orden (MedicationRequest) original
                 request: {
-                    reference: `MedicationRequest/${medRequestData.id}`, // Asume que el ID de la MedRequest está en medRequestData.id
+                    reference: `MedicationRequest/${medRequestData.id}`,
                     display: `Orden para ${medicationDisplay}`
                 },
-                effectiveDateTime: new Date().toISOString(), // Fecha y hora actual de la administración
+                effectiveDateTime: new Date().toISOString(),
                 dosage: {
-                    text: dosage // La dosis administrada, directamente del formulario
+                    text: dosage
                 }
             };
 
-            // Enviar la MedicationAdministration al backend
-            // ¡ATENCIÓN!: Reemplaza 'https://meds-backend-fjhd.onrender.com/medication-administration'
-            // con el endpoint correcto de tu backend para MedicationAdministration
             return fetch('https://meds-backend-fjhd.onrender.com/medication-administration', {
                 method: 'POST',
                 headers: {
@@ -111,31 +108,26 @@ document.getElementById('MedicamentosForm').addEventListener('submit', function(
                 body: JSON.stringify(medicationAdministration)
             });
         }
-        // Si no se confirma la administración, no hace nada más y resuelve la promesa.
-        return Promise.resolve(null);
+        return null;
     })
     .then(medAdminResponse => {
-        // Solo procesa si se envió una MedicationAdministration
-        if (medAdminResponse) {
-            if (!medAdminResponse.ok) {
-                return medAdminResponse.json().then(errorData => {
-                    throw new Error(errorData.issue ? errorData.issue[0].diagnostics : 'Error desconocido al confirmar la entrega del medicamento.');
-                });
-            }
-            return medAdminResponse.json();
+        if (medAdminResponse && !medAdminResponse.ok) {
+            return medAdminResponse.json().then(errorData => {
+                throw new Error(errorData.issue?.[0]?.diagnostics || 'Error al confirmar entrega del medicamento.');
+            });
         }
-        return null;
+        return medAdminResponse ? medAdminResponse.json() : null;
     })
     .then(medAdminData => {
         if (medAdminData) {
             console.log('MedicationAdministration Success:', medAdminData);
-            alert('Confirmación de entrega de medicamento registrada exitosamente!');
+            alert('¡Entrega del medicamento registrada exitosamente!');
         }
-        // Limpiar el formulario
+        // Limpiar formulario
         document.getElementById('MedicamentosForm').reset();
     })
     .catch(error => {
         console.error('Error general:', error);
-        alert('Hubo un error en el proceso: ' + error.message);
+        alert('Error: ' + error.message);
     });
 });

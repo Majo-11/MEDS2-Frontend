@@ -1,3 +1,4 @@
+        // Function to show custom messages
         function showMessage(message, type) {
             const messageBox = document.getElementById('messageBox');
             messageBox.textContent = message;

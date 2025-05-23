@@ -33,7 +33,7 @@
             };
 
             
-            fetch('https://meds2-backend-0f8w.onrender.com', {
+            fetch('https://meds2-backend-0f8w.onrender.com/medication-request/${medId}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

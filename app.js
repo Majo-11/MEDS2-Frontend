@@ -1,5 +1,4 @@
-        // Function to show custom messages
-        function showMessage(message, type) {
+function showMessage(message, type) {
             const messageBox = document.getElementById('messageBox');
             messageBox.textContent = message;
             messageBox.className = ''; // Clear existing classes
@@ -17,7 +16,6 @@
             // Get values from the form
             const name = document.getElementById('name').value;
             const familyName = document.getElementById('familyName').value;
-            // identifierSystem now gets value from select
             const identifierSystem = document.getElementById('identifierSystem').value;
             const identifierValue = document.getElementById('identifierValue').value;
             const medicationCode = document.getElementById('medicationCode').value;
@@ -45,13 +43,13 @@
                 },
                 subject: {
                     identifier: {
-                        system: identifierSystem, // This will now be "http://example.org/fhir/sid/cedula" or "http://example.org/fhir/sid/pasaporte"
+                        system: identifierSystem,
                         value: identifierValue
                     },
-                    display: `${name} ${familyName}` // Use template literal for display
+                    display: `${name} ${familyName}`
                 },
                 dosageInstruction: [{
-                    text: `Tomar ${dosage} cada ${frequency} horas durante ${duration} días` // Use template literal for text
+                    text: `Tomar ${dosage} cada ${frequency} horas durante ${duration} días`
                 }]
             };
 
@@ -64,6 +62,9 @@
                 };
             }
 
+            // --- DEBUGGING: Log the payload before sending ---
+            console.log('Payload being sent to backend:', JSON.stringify(medicationRequest, null, 2));
+
             // Send the request to the backend
             fetch('https://meds-backend-fjhd.onrender.com/medication-request', {
                 method: 'POST',
@@ -73,9 +74,15 @@
                 body: JSON.stringify(medicationRequest)
             })
             .then(response => {
+                // --- DEBUGGING: Log the raw response status and headers ---
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
                 if (!response.ok) {
                     // If response is not OK (e.g., 400, 500 status), throw an error
                     return response.json().then(errorData => {
+                        // --- DEBUGGING: Log error data from backend ---
+                        console.error('Error data from backend:', errorData);
                         throw new Error(errorData.message || 'Error en la solicitud');
                     });
                 }
@@ -86,7 +93,7 @@
                 showMessage('Receta creada y entrega registrada exitosamente!', 'success');
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error during fetch operation:', error);
                 showMessage(`Error al crear la receta: ${error.message}`, 'error');
             });
         });
